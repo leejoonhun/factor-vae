@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 
-from .factor_decoder import AlphaLayer
+from factorvae.factor_decoder import AlphaLayer
 
 
 class FactorPredictor(nn.Module):
@@ -14,17 +14,14 @@ class FactorPredictor(nn.Module):
 
     def __init__(self, num_factors: int, num_feats: int):
         super().__init__()
-        self.attn_layer = AttentionLayer(num_factors, num_feats)
+        self.attn_layer = MHA3d(num_factors, num_feats)
         self.alpha_layer = AlphaLayer(num_feats)
 
-    def forward(
-        self,
-        feats: torch.Tensor,  # (num_stocks, num_feats)
-    ) -> torch.Tensor:
+    def forward(self, feats: torch.Tensor) -> torch.Tensor:
         return self.alpha_layer(self.attn_layer(feats))
 
 
-class AttentionLayer(nn.Module):
+class MHA3d(nn.Module):
     def __init__(self, num_factors: int, num_feats: int):
         super().__init__()
         self.query = nn.Parameter(torch.rand(num_factors, num_feats))
@@ -35,17 +32,27 @@ class AttentionLayer(nn.Module):
         )
 
     def forward(self, feats: torch.Tensor) -> torch.Tensor:
-        attn, _ = self.attn_layer(
-            self.query, self.key_layer(feats), self.val_layer(feats)
+        attn = torch.stack(
+            [
+                self.attn_layer(
+                    self.query,
+                    self.key_layer(feat),
+                    self.val_layer(feat),
+                )[0]
+                for feat in feats
+            ]
         )
         return attn
 
 
 if __name__ == "__main__":
-    num_stocks, len_hist, num_chars = 5, 10, 16
+    batch_size, num_stocks, len_hist, num_chars = 1, 5, 10, 16
     num_factors, num_feats, num_pfs = 32, 128, 64
-    factors, feats = torch.rand(num_factors), torch.rand(num_stocks, num_feats)
+    factors, feats = (
+        torch.rand(batch_size, num_factors),
+        torch.rand(batch_size, num_stocks, num_feats),
+    )
     model = FactorPredictor(num_factors, num_feats)
     factors = model(feats)
-    assert factors.shape == (num_factors,)
+    assert factors.shape == (batch_size, num_factors)
     print("passed test")
