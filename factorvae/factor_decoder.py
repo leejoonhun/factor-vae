@@ -3,31 +3,42 @@ from torch import nn
 
 
 class FactorDecoder(nn.Module):
-    def __init__(self, num_stocks: int, num_factors: int, dim_hidden: int):
+    """Factor decoder for FactorVAE
+
+    Args:
+        num_factors (int): number of factors $K$
+        num_feats (int): number of features $H$
+    """
+
+    def __init__(self, num_factors: int, num_feats: int):
+        super().__init__()
+        self.alpha_layer = AlphaLayer(num_feats)
+        self.beta_layer = nn.Linear(num_feats, num_factors)
+
+    def forward(self, factors: torch.Tensor, feats: torch.Tensor) -> torch.Tensor:
+        return self.beta_layer(feats) @ factors + self.alpha_layer(feats)
+
+
+class AlphaLayer(nn.Module):
+    def __init__(self, num_feats: int):
         super().__init__()
         self.linear_layer = nn.Sequential(
-            nn.Linear(dim_hidden, dim_hidden), nn.LeakyReLU()
+            nn.Linear(num_feats, num_feats), nn.LeakyReLU()
         )
-        self.alpha_mean_layer = nn.Linear(dim_hidden, 1)
-        self.alpha_std_layer = nn.Sequential(nn.Linear(dim_hidden, 1), nn.Softplus())
-        self.beta_layer = nn.Linear(dim_hidden, num_factors)
+        self.mean_layer = nn.Linear(num_feats, 1)
+        self.std_layer = nn.Sequential(nn.Linear(num_feats, 1), nn.Softplus())
 
-    def forward(
-        self,
-        factors: torch.Tensor,  # (num_factors,)
-        feats: torch.Tensor,  # (num_stocks, dim_hidden)
-    ) -> torch.Tensor:
+    def forward(self, feats: torch.Tensor) -> torch.Tensor:
         hidden = self.linear_layer(feats)
-        alpha = torch.normal(
-            self.alpha_mean_layer(hidden), self.alpha_std_layer(hidden)
-        ).flatten()
-        return self.beta_layer(feats) @ factors + alpha
+        mean, std = self.mean_layer(hidden), self.std_layer(hidden)
+        return torch.normal(mean, std).flatten()
 
 
 if __name__ == "__main__":
-    num_stocks, num_factors, dim_hidden = 5, 30, 128
-    factors, feats = torch.rand(num_factors), torch.rand(num_stocks, dim_hidden)
-    model = FactorDecoder(num_stocks, num_factors, dim_hidden)
+    num_stocks, len_hist, num_chars = 5, 10, 16
+    num_factors, num_feats, num_pfs = 32, 128, 64
+    factors, feats = torch.rand(num_factors), torch.rand(num_stocks, num_feats)
+    model = FactorDecoder(num_factors, num_feats)
     returns = model(factors, feats)
     assert returns.shape == (num_stocks,)
     print("passed test")

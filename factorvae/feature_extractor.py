@@ -7,27 +7,30 @@ class FeatureExtractor(nn.Module):
 
     Args:
         num_char (int): number of characteristics $C$
-        dim_hidden (int): dimension of features $H$
+        num_feats (int): dimension of features $H$
     """
 
-    def __init__(self, num_char: int, dim_hidden: int):
+    def __init__(self, num_chars: int, num_feats: int):
         super().__init__()
-        self.linear_layer = nn.Sequential(nn.Linear(num_char, num_char), nn.LeakyReLU())
-        self.gru = nn.GRUCell(num_char, dim_hidden)
+        self.linear_layer = nn.Sequential(
+            nn.Linear(num_chars, num_chars), nn.LeakyReLU()
+        )
+        self.gru_cell = nn.GRUCell(num_chars, num_feats)
 
     def forward(
         self, chars: torch.Tensor  # (len_hist, num_stocks, num_chars)
     ) -> torch.Tensor:
         feats = None
         for char in chars:
-            feats = self.gru(self.linear_layer(char), feats)
-        return feats  # (num_stocks, dim_hidden)
+            feats = self.gru_cell(self.linear_layer(char), feats)
+        return feats
 
 
 if __name__ == "__main__":
-    num_stocks, len_hist, num_chars, dim_hidden = 5, 10, 16, 128
+    num_stocks, len_hist, num_chars = 5, 10, 16
+    num_factors, num_feats, num_pfs = 32, 128, 64
     chars = torch.rand(len_hist, num_stocks, num_chars)
-    model = FeatureExtractor(num_chars, dim_hidden)
+    model = FeatureExtractor(num_chars, num_feats)
     feature = model(chars)
-    assert feature.shape == (num_stocks, dim_hidden)
+    assert feature.shape == (num_stocks, num_feats)
     print("passed test")
