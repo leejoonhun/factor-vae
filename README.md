@@ -4,4 +4,4 @@ Unofficial PyTorch Implementation of [FactorVAE: A Probabilistic Dynamic Factor 
 
 ## Data Source
 
-- [Stooq](https://stooq.com/db/h/): The data is assumed to be flatten (i.e. in `data/data/<country_name>/*.txt` forms) before preprocessing. Please download the data from the website and flatten them.
+- [Stooq](https://stooq.com/db/h/): Only 'Daily' data is used. Please download files from the website and move them into `$PROJ_ROOT/data`.
