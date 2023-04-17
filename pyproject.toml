@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "factor-vae"
+version = "0.1.0"
+description = ""
+authors = ["Lee Joonhun <jhlee63@outlook.com>"]
+readme = "README.md"
+packages = []
+
+[tool.poetry.dependencies]
+python = "~3.11"
+black = "^23.3.0"
+isort = "^5.12.0"
+torch = "^2.0.0"
+numpy = "^1.24.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
