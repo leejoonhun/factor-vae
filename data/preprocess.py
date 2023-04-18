@@ -1,9 +1,8 @@
-from pathlib import Path
 from zipfile import ZipFile
 
-import pandas as pd
+import polars as pl
 
-DATA_DIR = Path(__file__).parent / "data"
+from .path import DATA_DIR
 
 
 def extract_zip():
@@ -30,13 +29,13 @@ def extract_zip():
 
 def make_csv():
     for dir in DATA_DIR.iterdir():
-        tmp = pd.DataFrame()
+        tmp = pl.DataFrame()
         for file in dir.iterdir():
             try:
-                tmp = pd.concat([tmp, pd.read_csv(file)], ignore_index=True)
-            except pd.errors.EmptyDataError:
+                tmp = pl.concat([tmp, pl.read_csv(file)])
+            except pl.NoDataError:
                 pass
-        tmp.to_csv(DATA_DIR / f"{dir.name}.csv", index=False)
+        tmp.write_csv(DATA_DIR / f"{dir.name}.csv")
         print(f"Saved {dir.name}.csv")
 
 
