@@ -2,13 +2,12 @@ from zipfile import ZipFile
 
 import polars as pl
 
-from .path import DATA_DIR
+from ._path import DATA_DIR
 
 
-def extract_zip():
+def extract_zip(locale: str):
     for zip in DATA_DIR.parent.iterdir():
-        if zip.suffix == ".zip":
-            locale = zip.stem.split("_")[1]
+        if zip.suffix == ".zip" and locale in zip.stem:
             with ZipFile(zip, "r") as zip_file:
                 zip_file.extractall(DATA_DIR)
             CURRENT_DIR = DATA_DIR / "data" / "daily" / locale
@@ -27,23 +26,24 @@ def extract_zip():
     print("Extracted zip files")
 
 
-def make_csv():
-    for dir in DATA_DIR.iterdir():
-        tmp = pl.DataFrame()
-        for file in dir.iterdir():
-            try:
-                tmp = pl.concat([tmp, pl.read_csv(file)])
-            except pl.NoDataError:
-                pass
-        tmp.write_csv(DATA_DIR / f"{dir.name}.csv")
-        print(f"Saved {dir.name}.csv")
+def make_csv(locale: str):
+    locale_dir = DATA_DIR / locale
+    tmp = pl.DataFrame()
+    for file in locale_dir.iterdir():
+        try:
+            tmp = pl.concat([tmp, pl.read_csv(file)])
+        except pl.NoDataError:
+            pass
+    tmp.write_csv(DATA_DIR / f"{locale}.csv")
+    print(f"Saved {locale}.csv")
 
 
-def main():
-    if not (DATA_DIR / "us").exists():
-        extract_zip()
-    make_csv()
+def main(locale: str):
+    if not (DATA_DIR / locale).exists():
+        extract_zip(locale)
+    make_csv(locale)
 
 
 if __name__ == "__main__":
-    main()
+    for locale in ["hk", "hu", "jp", "pl", "uk", "us"]:
+        main(locale)

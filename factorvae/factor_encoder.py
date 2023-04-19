@@ -1,3 +1,5 @@
+from typing import Tuple
+
 import torch
 from torch import nn
 
@@ -7,39 +9,29 @@ class FactorEncoder(nn.Module):
 
     Args:
         num_pfs (int): number of portfolios $M$
-        num_factors (int): number of factors $K$
+        num_facts (int): number of facts $K$
         num_feats (int): number of features $H$
     """
 
-    def __init__(self, num_pfs: int, num_factors: int, num_feats: int):
+    def __init__(self, num_facts: int, num_feats: int, num_pfs: int):
         super().__init__()
         self.pf_layer = nn.Sequential(nn.Linear(num_feats, num_pfs), nn.Softmax(dim=0))
-        self.mapping_layer = MappingLayer(num_pfs, num_factors)
+        self.mapping_layer = MappingLayer(num_facts, num_pfs)
 
-    def forward(self, returns: torch.Tensor, feats: torch.Tensor) -> torch.Tensor:
-        pf_returns = torch.einsum("bs,bsm->bm", returns, self.pf_layer(feats))
-        return self.mapping_layer(pf_returns)
+    def forward(
+        self, rets: torch.Tensor, feats: torch.Tensor
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        return self.mapping_layer(
+            torch.einsum("bs,bsm->bm", rets, self.pf_layer(feats))
+        )
 
 
 class MappingLayer(nn.Module):
-    def __init__(self, num_pfs, num_factors):
+    def __init__(self, num_facts: int, num_pfs: int):
         super().__init__()
-        self.mean_layer = nn.Linear(num_pfs, num_factors)
-        self.std_layer = nn.Sequential(nn.Linear(num_pfs, num_factors), nn.Softplus())
+        self.mean_layer = nn.Linear(num_pfs, num_facts)
+        self.std_layer = nn.Sequential(nn.Linear(num_pfs, num_facts), nn.Softplus())
 
-    def forward(self, pf_returns: torch.Tensor) -> torch.Tensor:
-        mean, std = self.mean_layer(pf_returns), self.std_layer(pf_returns)
-        return torch.normal(mean, std)
-
-
-if __name__ == "__main__":
-    batch_size, num_stocks, len_hist, num_chars = 1, 5, 10, 16
-    num_factors, num_feats, num_pfs = 32, 128, 64
-    feats, returns = (
-        torch.rand(batch_size, num_stocks, num_feats),
-        torch.rand(batch_size, num_stocks),
-    )
-    model = FactorEncoder(num_pfs, num_factors, num_feats)
-    factors = model(returns, feats)
-    assert factors.shape == (batch_size, num_factors)
-    print("passed test")
+    def forward(self, pf_rets: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+        mean, std = self.mean_layer(pf_rets), self.std_layer(pf_rets)
+        return mean, std.clip(min=0)
