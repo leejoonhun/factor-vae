@@ -11,7 +11,7 @@ def get_dataloaders(
     args: Namespace,
 ) -> Tuple[dt.DataLoader, dt.DataLoader, dt.DataLoader]:
     trainset, validset, testset = dt.random_split(
-        StockReturnDataset(args.locale, args.len_hist), [0.8, 0.1, 0.1]
+        StockReturnDataset(args.locale, args.len_hist, args.num_stocks), [0.8, 0.1, 0.1]
     )
     args.num_chars = trainset[0][0].shape[-1]
     return (

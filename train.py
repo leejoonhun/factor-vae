@@ -35,7 +35,8 @@ def train(args):
     nll_loss = l.NLLLoss()
     kld_loss = l.KLDivLoss()
     enc_optim = optim.Adam(
-        list(model.factor_encoder.parameters())
+        list(model.feature_extractor.parameters())
+        + list(model.factor_encoder.parameters())
         + list(model.factor_predictor.parameters()),
         lr=args.lr,
     )
@@ -44,7 +45,8 @@ def train(args):
     if cuda.device_count() > 1:
         model = nn.DataParallel(model)
         enc_optim = optim.Adam(
-            list(model.module.factor_encoder.parameters())
+            list(model.module.feature_extractor.parameters())
+            + list(model.module.factor_encoder.parameters())
             + list(model.module.factor_predictor.parameters()),
             lr=args.lr,
         )

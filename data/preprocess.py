@@ -23,7 +23,7 @@ def extract_zip(locale: str):
                         if file.name.split(".")[-2] == locale:
                             _ = file.replace(f"{DEST_DIR}/{file.name}")
             (DATA_DIR / "data").rmdir()
-    print("Extracted zip files")
+    print(f"Extracted {locale}.zip")
 
 
 def make_csv(locale: str):

@@ -5,14 +5,15 @@ import polars as pl
 import torch
 from torch.utils import data as dt
 
-from .utils import DATA_DIR
 from .preprocess import main as preprocess
+from .utils import DATA_DIR
 
 
 class StockReturnDataset(dt.Dataset):
-    def __init__(self, locale: str, len_hist: int):
+    def __init__(self, locale: str, len_hist: int, num_stocks: int):
         super().__init__()
         self.len_hist = len_hist
+        self.num_stocks = num_stocks
 
         if not (locale_path := DATA_DIR / f"{locale}.csv").exists():
             preprocess(locale)
@@ -47,8 +48,8 @@ class StockReturnDataset(dt.Dataset):
 
     def __getitem__(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor]:
         return (
-            torch.tensor(self.data[idx : idx + self.len_hist]),
-            torch.tensor(self.data[idx + self.len_hist, :, -1]),
+            torch.tensor(self.data[idx : idx + self.len_hist, : self.num_stocks, :]),
+            torch.tensor(self.data[idx + self.len_hist, : self.num_stocks, -1]),
         )
 
     def __len__(self) -> int:
