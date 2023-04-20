@@ -5,10 +5,10 @@ import wandb
 from torch import cuda, nn, optim
 from tqdm import trange
 
-import losses as l
 import metrics
 from data import get_dataloaders
 from factorvae import FactorVAE
+from losses import KLDivLoss, NLLLoss
 from utils import parse_args, seed_everything
 
 
@@ -32,8 +32,8 @@ def train(args):
     logger.info("Building model and configuring optimizer")
     model = FactorVAE(args).to(device)
 
-    nll_loss = l.NLLLoss()
-    kld_loss = l.KLDivLoss()
+    nll_loss = NLLLoss()
+    kld_loss = KLDivLoss()
     enc_optim = optim.Adam(
         list(model.feature_extractor.parameters())
         + list(model.factor_encoder.parameters())

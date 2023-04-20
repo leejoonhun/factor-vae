@@ -10,16 +10,23 @@ def safe_div(a: np.ndarray, b: np.ndarray) -> np.ndarray:
 def calc_rankic(preds: List[np.ndarray], futrs: List[np.ndarray]) -> np.ndarray:
     """Calculates rank information coefficient"""
     rankic = _calc_rankic(preds, futrs)
-    return safe_div(rankic.mean(), rankic)
+    return rankic.mean()
 
 
 def calc_rankicir(preds: List[np.ndarray], futrs: List[np.ndarray]) -> np.ndarray:
     """Calculates information ratio of Rank IC"""
-    ric = _calc_rankic(preds, futrs)
-    return safe_div(ric.mean(), ric.std())
+    rankic = _calc_rankic(preds, futrs)
+    return safe_div(rankic.mean(), rankic.std())
 
 
 def _calc_rankic(preds: List[np.ndarray], futrs: List[np.ndarray]) -> np.ndarray:
     """Calculates rank information coefficient by element"""
-    preds, futrs = np.stack(preds), np.stack(futrs)
-    ...
+    preds, futrs = (
+        np.argsort(np.concatenate(preds), axis=1),
+        np.argsort(np.concatenate(futrs), axis=1),
+    )
+    num_stocks = preds.shape[-1]
+    return 1 - safe_div(
+        6 * ((preds - futrs) ** 2).sum(axis=1),
+        num_stocks * (num_stocks**2 - 1),
+    )

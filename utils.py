@@ -22,7 +22,7 @@ def parse_args():
     parser.add_argument("--metric", type=str, default="rankic")
     parser.add_argument("--lr", type=float, default=1e-4)
     parser.add_argument("--gamma", type=float, default=0.99)
-    parser.add_argument("--epochs", type=int, default=100)
+    parser.add_argument("--epochs", type=int, default=1_000)
     parser.add_argument("--seed", type=int, default=718)
     args = parser.parse_args()
     return args

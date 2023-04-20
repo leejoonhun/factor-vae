@@ -6,7 +6,7 @@ class FeatureExtractor(nn.Module):
     """Feature extractor for FactorVAE
 
     Args:
-        num_char (int): number of characteristics $C$
+        num_chars (int): number of characteristics $C$
         num_feats (int): dimension of features $H$
     """
 
