@@ -2,7 +2,7 @@ from zipfile import ZipFile
 
 import polars as pl
 
-from ._path import DATA_DIR
+from .utils import DATA_DIR
 
 
 def extract_zip(locale: str):

@@ -5,7 +5,7 @@ import polars as pl
 import torch
 from torch.utils import data as dt
 
-from ._path import DATA_DIR
+from .utils import DATA_DIR
 from .preprocess import main as preprocess
 
 
