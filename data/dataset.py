@@ -28,23 +28,25 @@ class StockReturnDataset(dt.Dataset):
             .apply(lambda df: df.head(-len_hist + 1))
             .sort(["<DATE>", "<TICKER>"])
         )
-        self.data = np.stack(
-            [
-                df.pivot(
-                    val_col, "<DATE>", "<TICKER>", aggregate_function="first"
-                ).to_numpy()
-                for val_col in [
-                    "<OPEN>",
-                    "<HIGH>",
-                    "<LOW>",
-                    "<CLOSE>",
-                    "<VOL>",
-                    "<RETURN>",
-                ]
-            ],
-            axis=2,
+        self.data = np.nan_to_num(
+            np.stack(
+                [
+                    df.pivot(
+                        val_col, "<DATE>", "<TICKER>", aggregate_function="first"
+                    ).to_numpy()
+                    for val_col in [
+                        "<OPEN>",
+                        "<HIGH>",
+                        "<LOW>",
+                        "<CLOSE>",
+                        "<VOL>",
+                        "<RETURN>",
+                    ]
+                ],
+                axis=2,
+            ),
+            nan=0,
         )
-        self.data.fill(0)
 
     def __getitem__(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor]:
         return (
